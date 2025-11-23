@@ -11,7 +11,8 @@ pacman::p_load(
   tidyverse,  # data management and visualization
   skimr,
   readxl,      # reads excel datasets
-  units
+  units,
+  tidyxl
 )
 
 
@@ -152,6 +153,7 @@ id_key <- linelist %>%
   
 # add columns -------
   linelist <- linelist %>% 
+  
   ## diagnosis group -------
   mutate(
     clinical_diagn_grp = recode(clinical_diagn,
@@ -177,7 +179,7 @@ id_key <- linelist %>%
     )
     ) %>% 
   ## age categories: manual ------
-  mutate( age_cat = epikit::age_categories(age, breakers = c(0, 40, 50, 60, 70, 80, 90))) %>% 
+  mutate(age_cat = epikit::age_categories(age, breakers = c(0, 40, 50, 60, 70, 80, 90))) %>% 
   
   
   ## hours to fate ----------
@@ -203,7 +205,18 @@ id_key <- linelist %>%
         hours_to_fate == "> 12" ~ Inf,
         TRUE ~ NA_real_
       )
-          )
+          ) %>% 
+  
+  ## hours to tte
+    mutate(
+      hours_to_adv_echo_cat = case_when(
+        hours_to_adv_echo == "<24h"   ~ 1,
+        hours_to_adv_echo == "24h"  ~ 2,
+        hours_to_adv_echo == "48h"    ~ 3,
+        hours_to_adv_echo == ">72h" ~ 4,
+        TRUE ~ NA_real_
+      )
+    )
   
 # column order ----
 ## delete columns
