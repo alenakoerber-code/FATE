@@ -54,14 +54,14 @@ server <- function(input, output, session) {
   
   # filtered data, depending Examiner & Pathology
   filtered_data <- reactive({
-    dat <- linelist
+    dat <- linelist_long
     
     if (!is.null(input$examiner) && length(input$examiner) > 0) {
       dat <- dat %>% filter(examiner %in% input$examiner)
     }
     
-    if (!is.null(input$diagn_grp) && length(input$diagn_grp) > 0) {
-      dat <- dat %>% filter(clinical_diagn_grp %in% input$diagn_grp)
+    if (!is.null(input$diagn_grp) && length(input$pathology_fate) > 0) {
+      dat <- dat %>% filter(pathology_fate %in% input$pathology_fate)
     }
     
     dat
@@ -129,3 +129,7 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
+
+# to do ---------
+## farben ändern

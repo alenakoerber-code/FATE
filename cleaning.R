@@ -236,19 +236,22 @@ id_key <- linelist %>%
         "andere Befunde:Vergr. Vorhöfe" = "atrium",
         "Biatriale Dilatation" = "atrium",
         "Volumenbelastung/V.cava/ Rechtsherzbelastung/hochgradige TI" = "VCI, RV, valve",
-        "andere Befunde: atriale Dilatation, mittelgradige MI" = "atria, valve",
-        "Unauffällig" = "normal",
+        "andere Befunde: atriale Dilatation, mittelgradige MI" = "atrium, valve",
+        "Unauffällig" = "none",
         "Volumendefizit" = "VCI",
         "Eingeschränkte LV-Funktion" = "LV",
         "Volumenbelastung" = "IVC",
         "Generalisierte Hypokineise (= LV-Funktionseinschränkung)" = "LV",
         "Rechtsherzbelastungszeichen" = "RV",
         "Eingeschränkte LV- und RV-Funktion/Volumenbelastung" = "LV, RV",
+        "Eingeschränkte LV- und RV-Funktion" = "LV, RV",
+        "eingeschränkte LV-Funktion" = "LV",
+        "Normalbefund" = "none",
         "LV-Hypertrophie" = "LV",
         "Pleuraerguss/Volumenbelastung" = "Pleura, IVC",
         "Volumenbelastung/eingeschränkte LV-Funktion" = "IVC, LV",
         "eingeschränkte LV- und RV-Funktion/ eingeschränkte EF" = "LV, RV",
-        "Unauffälliger befund" = "normal",
+        "Unauffälliger befund" = "none",
         "eingeschränkte LV- und RV-Funktion" = "LV, RV",
         "eingeschränkte LV- und RV-Funktion/RV dilatiert/Volumenbelastung" = "LV, RV, IVC"
       )
@@ -265,3 +268,13 @@ id_key <- linelist %>%
       location_fate, date_fate, hours_to_fate, hours_to_fate_cat, lower_hours_fate, upper_hours_fate, 
       everything())
 
+
+# pivot
+  linelist_long <- linelist %>% 
+    separate_rows(pathology_fate, sep = ",") %>% 
+    mutate(
+      pathology_fate = str_trim(pathology_fate)
+    )
+  
+  # to do --------
+  ## split pathology fate
