@@ -12,7 +12,7 @@ pacman::p_load(
   skimr,
   readxl,      # reads excel datasets
   units,
-  tidyxl
+  kableExtra  # pivoting
 )
 
 
@@ -133,7 +133,13 @@ linelist <- linelist_raw %>%
       date_fate = replace_na (
                 date_fate, median(date_fate, na.rm = TRUE) 
                              )
-          )
+          ) %>% 
+    #### error type
+    mutate (
+      error_type = replace_na(
+          error_type, "none"
+      )
+    )
   
   
   # pseudonymisation ------
@@ -213,19 +219,45 @@ id_key <- linelist %>%
         hours_to_adv_echo == "<24h"   ~ 1,
         hours_to_adv_echo == "24h"  ~ 2,
         hours_to_adv_echo == "48h"    ~ 3,
-        hours_to_adv_echo == ">72h" ~ 4,
+        hours_to_adv_echo == "72h" ~ 4,
+        hours_to_adv_echo == ">72h" ~ 5,
         TRUE ~ NA_real_
+      )
+    ) %>% 
+    
+    ## pathology
+    ### fate
+    mutate(
+      pathology_fate = recode(outcome_fate,
+        "andere Befunde:Vergr. Vorhöfe" = "atrium",
+        "Biatriale Dilatation" = "atrium",
+        "Volumenbelastung/V.cava/ Rechtsherzbelastung/hochgradige TI" = "VCI, RV, valve",
+        "andere Befunde: atriale Dilatation, mittelgradige MI" = "atria, valve",
+        "Unauffällig" = "normal",
+        "Volumendefizit" = "VCI",
+        "Eingeschränkte LV-Funktion" = "LV",
+        "Volumenbelastung" = "IVC",
+        "Generalisierte Hypokineise (= LV-Funktionseinschränkung)" = "LV",
+        "Rechtsherzbelastungszeichen" = "RV",
+        "Eingeschränkte LV- und RV-Funktion/Volumenbelastung" = "LV, RV",
+        "LV-Hypertrophie" = "LV",
+        "Pleuraerguss/Volumenbelastung" = "Pleura, IVC",
+        "Volumenbelastung/eingeschränkte LV-Funktion" = "IVC, LV",
+        "eingeschränkte LV- und RV-Funktion/ eingeschränkte EF" = "LV, RV",
+        "Unauffälliger befund" = "normal",
+        "eingeschränkte LV- und RV-Funktion" = "LV, RV",
+        "eingeschränkte LV- und RV-Funktion/RV dilatiert/Volumenbelastung" = "LV, RV, IVC"
       )
     )
   
 # column order ----
 ## delete columns
   linelist <- linelist %>% 
-    select(-c(x16, advanced_echo_followed)) %>% 
+    select(-c(x18, advanced_echo_followed)) %>% 
 ## rearrange columns
     select(
       patient_id, case_id, gender, age, age_cat, 
-      clinical_diagn, clinical_diagn_grp, reason_fate, outcome_fate, consequence, 
+      clinical_diagn, clinical_diagn_grp, reason_fate, outcome_fate, pathology_fate, consequence, 
       location_fate, date_fate, hours_to_fate, hours_to_fate_cat, lower_hours_fate, upper_hours_fate, 
       everything())
 
