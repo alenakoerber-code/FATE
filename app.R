@@ -16,18 +16,18 @@ ui <- fluidPage(
       selectInput(
         inputId = "examiner",
         label   = "Examiner",
-        choices = sort(unique(linelist$examiner)),
+        choices = sort(unique(linelist_long$examiner)),
         multiple = TRUE,
-        selected = sort(unique(linelist$examiner))
+        selected = sort(unique(linelist_long$examiner))
       ),
       
       # 2. Filter: Pathology group
       selectInput(
         inputId = "pathology_fate",
         label   = "Pathology",
-        choices = sort(unique(linelist$pathology_fate)),
+        choices = levels(linelist_long$pathology_fate),
         multiple = TRUE,
-        selected = sort(unique(linelist$pathology_fate))
+        selected = sort(unique(linelist_long$pathology_fate))
       ),
       
       # 3. switch proportion vs absolute

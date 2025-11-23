@@ -235,10 +235,10 @@ id_key <- linelist %>%
       pathology_fate = recode(outcome_fate,
         "andere Befunde:Vergr. Vorhöfe" = "atrium",
         "Biatriale Dilatation" = "atrium",
-        "Volumenbelastung/V.cava/ Rechtsherzbelastung/hochgradige TI" = "VCI, RV, valve",
+        "Volumenbelastung/V.cava/ Rechtsherzbelastung/hochgradige TI" = "IVC, RV, valve",
         "andere Befunde: atriale Dilatation, mittelgradige MI" = "atrium, valve",
         "Unauffällig" = "none",
-        "Volumendefizit" = "VCI",
+        "Volumendefizit" = "IVC",
         "Eingeschränkte LV-Funktion" = "LV",
         "Volumenbelastung" = "IVC",
         "Generalisierte Hypokineise (= LV-Funktionseinschränkung)" = "LV",
@@ -248,7 +248,7 @@ id_key <- linelist %>%
         "eingeschränkte LV-Funktion" = "LV",
         "Normalbefund" = "none",
         "LV-Hypertrophie" = "LV",
-        "Pleuraerguss/Volumenbelastung" = "Pleura, IVC",
+        "Pleuraerguss/Volumenbelastung" = "pleura, IVC",
         "Volumenbelastung/eingeschränkte LV-Funktion" = "IVC, LV",
         "eingeschränkte LV- und RV-Funktion/ eingeschränkte EF" = "LV, RV",
         "Unauffälliger befund" = "none",
@@ -269,12 +269,22 @@ id_key <- linelist %>%
       everything())
 
 
-# pivot
+# pivot -----
   linelist_long <- linelist %>% 
     separate_rows(pathology_fate, sep = ",") %>% 
     mutate(
       pathology_fate = str_trim(pathology_fate)
-    )
+    ) %>% 
+
   
-  # to do --------
-  ## split pathology fate
+  ## own_sorting pathology_fate
+  mutate(
+    pathology_fate = factor(
+      pathology_fate,
+      levels = c("LV", "RV", "atrium", "IVC", "valve", "pleura", "none")
+    )
+  )
+
+  
+  
+# to do --------
