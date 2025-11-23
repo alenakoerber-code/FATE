@@ -1,27 +1,8 @@
 # intro -------
+source("cleaning.R")
 
-library("renv")
-pacman::p_load(
-  rio,        # importing data  
-  here,       # relative file pathways  
-  janitor,    # data cleaning and tables
-  lubridate,  # working with dates
-  matchmaker, # dictionary-based cleaning
-  epikit,     # age_categories() function
-  tidyverse,  # data management and visualization
-  skimr,
-  readxl,      # reads excel datasets
-  units,
-  kableExtra,  # pivoting
-  shiny
-)
+library(shiny)
 
-# read dataset
-linelist <- readr::read_csv("linelist_FATE.csv", show_col_types = FALSE) %>%
-  mutate(
-    correct_label = if_else(correct == 1, "correct", "incorrect"),
-    clinical_diagn_grp = forcats::fct_explicit_na(clinical_diagn_grp, na_level = "unknown")
-  )
 
 # ui ----------
 ui <- fluidPage(
@@ -42,19 +23,19 @@ ui <- fluidPage(
       
       # 2. Filter: Pathology group
       selectInput(
-        inputId = "diagn_grp",
-        label   = "Pathology group (clinical_diagn_grp)",
-        choices = sort(unique(linelist$clinical_diagn_grp)),
+        inputId = "pathology_fate",
+        label   = "Pathology",
+        choices = sort(unique(linelist$pathology_fate)),
         multiple = TRUE,
-        selected = sort(unique(linelist$clinical_diagn_grp))
+        selected = sort(unique(linelist$pathology_fate))
       ),
       
       # 3. switch proportion vs absolute
-      checkboxInput(
+      radioButtons(
         inputId = "prop_abs",
         label   = "",
-        choices = list("proportion" = 1, "absolute" = 2),
-        selected = 1
+        choices = c("proportion", "count"),
+        selected = "proportion"
       )
     ),
     
@@ -89,7 +70,7 @@ server <- function(input, output, session) {
   # summary: per Examiner x Pathologie x korrekt/inkorrekt
   summary_data <- reactive({
     filtered_data() %>%
-      group_by(examiner, clinical_diagn_grp, correct_label) %>%
+      group_by(examiner, pathology_fate, correct_label) %>%
       summarise(
         n = n(),
         .groups = "drop_last"
@@ -106,8 +87,10 @@ server <- function(input, output, session) {
     dat <- summary_data()
     req(nrow(dat) > 0)   # plot only, if data
     
-    if (input$show_prop) {
-      ggplot(dat, aes(x = clinical_diagn_grp, y = prop, fill = correct_label)) +
+  ## radiobutton proportion vs abs count
+    ### proportion
+    if (input$prop_abs == "proportion") {
+      ggplot(dat, aes(x = pathology_fate, y = prop, fill = correct_label)) +
         geom_col(position = "stack") +
         scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
         labs(
@@ -119,8 +102,11 @@ server <- function(input, output, session) {
         facet_wrap(~ examiner) +
         coord_flip() +
         theme_minimal()
-    } else {
-      ggplot(dat, aes(x = clinical_diagn_grp, y = n, fill = correct_label)) +
+    } 
+    
+    ### count
+    else {
+      ggplot(dat, aes(x = pathology_fate, y = n, fill = correct_label)) +
         geom_col(position = "stack") +
         labs(
           x = "Pathology group",
@@ -134,10 +120,10 @@ server <- function(input, output, session) {
     }
   })
   
-  # Tabelle -------
+  # Table -------
   output$table_quality <- renderTable({
     summary_data() %>%
-      arrange(examiner, clinical_diagn_grp, desc(correct_label)) %>%
+      arrange(examiner, pathology_fate, desc(correct_label)) %>%
       mutate(prop = scales::percent(prop, accuracy = 0.1))
   })
 }

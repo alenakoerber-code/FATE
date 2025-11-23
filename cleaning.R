@@ -121,9 +121,10 @@ linelist <- linelist_raw %>%
                                "ITS" = "intensive care unit",
                                "Station" = "ward"
                                )
-      ) %>% 
-  ### set class
+      ) %>%
     
+
+  ### set class
     #### date as date format
     mutate(date_fate  = as.Date(date_fate)) %>% 
   
@@ -163,7 +164,6 @@ id_key <- linelist %>%
   ## diagnosis group -------
   mutate(
     clinical_diagn_grp = recode(clinical_diagn,
-                                "Z.n. Schrittmachernendokarditis - unklares Fieber" = "fever",
                                 "Herzinsuffizienz/ Pleuraerguss" = "congestive heart failure",
                                 "Herzinsuffizienz" = "congestive heart failure",
                                 "LV-Hypertrophie/atriale Dil." = "hypertension",
@@ -224,6 +224,10 @@ id_key <- linelist %>%
         TRUE ~ NA_real_
       )
     ) %>% 
+    
+    
+    #### outcome label fate
+    mutate(correct_label = if_else(correct == 1, "correct", "incorrect")) %>% 
     
     ## pathology
     ### fate
