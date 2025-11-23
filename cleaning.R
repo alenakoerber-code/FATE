@@ -55,14 +55,27 @@ linelist <- linelist_raw %>%
                     "Rahaus, Wolfgang (Le) I" = "Rahaus, Wolfgang"  
                     )
               ) %>%
-      #### gender
+      
+      #### examiner names
+        mutate(
+          examiner = recode(examiner,
+                             "Bartel" = "A",
+                             "Gengnagel" = "B",
+                             "Bender" = "C",
+                             "Leesch" = "D",
+                             "Stuhrberg" = "E"
+                             )
+              ) %>%
+    
+      #### patient gender
         mutate(
             gender = recode(gender,
                     "m" = "male",
                     "w" = "female",
                     .default = "other"
                     )
-              ) %>% 
+              ) %>%
+    
       #### hours to fate
         mutate(
           hours_to_fate = recode(hours_to_fate,
@@ -73,6 +86,41 @@ linelist <- linelist_raw %>%
            
         ) %>% 
   
+  
+      #### reason for fate
+        mutate(
+          reason_fate = recode(reason_fate,
+                               "kardial" = "cardiac",
+                               "kardial / Dyspnoe" = "dyspnea",
+                               "kardial /Dyspnoe" = "dypnea",
+                               "Pulmonal" = "dyspnea",
+                               "Dyspnoe" = "dyspnea",
+                               "kardial/pulmonal" = "dyspnea",
+                               "Prä-OP Übungspatient" = "training",
+                               "Übungspatient/SaZ-Gutachten" = "training",
+                               "Übungspatient" = "training",
+                               "kardial Verlaufskontrolle" = "cardiac",
+                               "Synkppe, AZ Reduktion" = "cardiac",
+                               "kardial / Kreislauf" = "cardiac",
+                               "kreislauf / pulmonal" = "dyspnea",
+                               "Volumenstatus" = "cardiac",
+                               "Kreislauf /Schock" = "cardiac",
+                               "kardial / pulmonal" = "dyspnea",
+                               "Kreislauf / kardial" = "cardiac",
+                               "Dyspnoe/pulmonal" = "dyspnea",
+                               .default = "other"
+            
+          )
+        ) %>%
+      
+    #### location fate translation
+      mutate(
+        location_fate = recode(location_fate,
+                               "ZNA" = "emergency department",
+                               "ITS" = "intensive care unit",
+                               "Station" = "ward"
+                               )
+      ) %>% 
   ### set class
     
     #### date as date format
@@ -117,7 +165,6 @@ id_key <- linelist %>%
                                 "Thoraxschmerzen" = "chest pain",
                                 "Normalbefund" = "normal",
                                 "Exsikkose" = "dehydration",
-                                "Normozytäre Anämie" = "anemia",
                                 "TAA / Herzinsuffizienz" = "arrhythmia",
                                 "VHF / Herzinsuffizienz" = "arrhythmia",
                                 "TAA bei VHF" = "arrhythmia",
@@ -161,7 +208,7 @@ id_key <- linelist %>%
 # column order ----
 ## delete columns
   linelist <- linelist %>% 
-    select(-c(x16)) %>% 
+    select(-c(x16, advanced_echo_followed)) %>% 
 ## rearrange columns
     select(
       patient_id, case_id, gender, age, age_cat, 
