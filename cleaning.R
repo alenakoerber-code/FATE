@@ -12,7 +12,8 @@ pacman::p_load(
   skimr,
   readxl,      # reads excel datasets
   units,
-  kableExtra # pivoting
+  kableExtra, # pivoting
+  ComplexHeatmap
 )
 
 
@@ -293,21 +294,20 @@ id_key <- linelist %>%
     group_by(examiner, pathology_fate, error_type) %>%
     summarise(n = n(), .groups = "drop")
   
-  error_count_wide <- error_count %>% 
-    pivot_wider(
-      names_from  = error_type,
-      values_from = n,
-      values_fill = 0
-    )
+  ### error_count_wide <- error_count %>% 
+  ###  pivot_wider(
+  ###    names_from  = error_type,
+  ###    values_from = n,
+  ###    values_fill = 0
+  ###  )
   
   
    ## 
   
-  heat_df <- linelist_long %>%
-    group_by(examiner, pathology_fate, error_type) %>%
-    summarise(n = n(), .groups = "drop") %>%
+  heat_df <- error_count %>%
     group_by(examiner, pathology_fate) %>%
-    # häufigster error_type je Kombination:
+    summarise(n = n(), .groups = "drop") %>%
+    # most often error_type per combination:
     slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
     ungroup()
   
@@ -324,6 +324,12 @@ id_key <- linelist %>%
   
   rownames(heat_df) <- heat_df$examiner
   heat_df$examiner <- NULL
+  
+  ### optional: set levels
+  heat_df[] <- lapply(
+    heat_df,
+    function(x) factor(x, levels = c("none", "false_pos", "false_neg"))
+  )
   
   heat_mat <- as.matrix(heat_df)
   
