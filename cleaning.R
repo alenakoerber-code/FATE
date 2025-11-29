@@ -13,7 +13,7 @@ pacman::p_load(
   readxl,      # reads excel datasets
   units,
   kableExtra, # pivoting
-  ComplexHeatmap
+  circlize    # colorRamp2 heatmap
 )
 
 
@@ -289,9 +289,9 @@ id_key <- linelist %>%
 
 # matrix heatmap HEATMAT ------------
  
-  ## table error counts
-  error_count <- linelist_long %>% 
-    group_by(examiner, pathology_fate, error_type) %>%
+  ## table proportion correct_label
+  correct_count <- linelist_long %>% 
+    group_by(examiner, pathology_fate, correct_label) %>%
     summarise(n = n(), .groups = "drop")
   
   ### error_count_wide <- error_count %>% 
@@ -304,33 +304,24 @@ id_key <- linelist %>%
   
    ## 
   
-  heat_df <- error_count %>%
-    group_by(examiner, pathology_fate) %>%
-    summarise(n = n(), .groups = "drop") %>%
-    # most often error_type per combination:
-    slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
-    ungroup()
   
   
   ## re-pivot to wide
-  heat_df <- heat_df %>% 
-    select(examiner, pathology_fate, error_type) %>% 
+  heat_df_wide <- correct_count %>% 
+    select(examiner, pathology_fate, correct_label) %>% 
     pivot_wider(
       names_from = pathology_fate,
-      values_from = error_type
+      values_from = correct_label
     )
   
-  heat_df <- as.data.frame(heat_df)
+  heat_df_wide <- as.data.frame(heat_df_wide)
   
-  rownames(heat_df) <- heat_df$examiner
-  heat_df$examiner <- NULL
+  rownames(heat_df_wide) <- linelist_long$examiner
+  heat_df_wide$examiner <- NULL
   
   ### optional: set levels
-  heat_df[] <- lapply(
-    heat_df,
-    function(x) factor(x, levels = c("none", "false_pos", "false_neg"))
-  )
+    ### heat_df[] <- lapply(heat_df, function(x) factor(x, levels = c("none", "false_pos", "false_neg")))
   
-  heat_mat <- as.matrix(heat_df)
+  heat_mat <- as.matrix(heat_df_wide)
   
 # to do --------

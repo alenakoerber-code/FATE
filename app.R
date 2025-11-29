@@ -44,8 +44,8 @@ ui <- fluidPage(
       plotOutput("plot_quality", height = "450px"),
       br(),
       ## h4("Summary table"), tableOutput("table_quality")
-      h3("FATE heatmap"),
-      plotOutput("heatmap_plot", height = "500px")
+      h3("FATE error heatmap"),
+      plotOutput("heatmap_errors", height = "500px")
     
     )
   )
@@ -55,8 +55,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   
- 
-  
+
   
 
   ### filtered data, depending Examiner & Pathology ----------
@@ -138,6 +137,26 @@ server <- function(input, output, session) {
 
   
   ## heatmap -------
+output$heatmap_errors <- renderPlot({
+  mat <- heat_mat_errors
+  req(nrow(mat) > 0, ncol(mat) > 0)
+  
+  max_val <- max(mat, na.rm = TRUE)
+  
+  Heatmap(
+    mat,
+    name = "n_errors",
+    col  = circlize::colorRamp2(
+      c(0, max_val),
+      c("white", "red")          # 0 = weiß, viele Fehler = dunkelrot
+    ),
+    cluster_rows    = FALSE,
+    cluster_columns = FALSE,
+    row_title       = "Examiner",
+    column_title    = "Pathology (FATE)"
+  )
+})
+
   
   ### plot barchart ---------
   output$plot_quality <- renderPlot({
