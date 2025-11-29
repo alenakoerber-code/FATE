@@ -12,9 +12,11 @@ pacman::p_load(
   skimr,
   readxl,      # reads excel datasets
   units,
-  kableExtra, # pivoting
-  circlize    # colorRamp2 heatmap
-)
+  kableExtra,        # pivoting
+  circlize          # colorRamp2 heatmap
+  # ComplexHeatmap     # installed via BiocManager
+  )
+
 
 
 # IMPORT 
@@ -288,11 +290,22 @@ id_key <- linelist %>%
 
 
 # matrix heatmap HEATMAT ------------
- 
-  ## table proportion correct_label
-  correct_count <- linelist_long %>% 
-    group_by(examiner, pathology_fate, correct_label) %>%
-    summarise(n = n(), .groups = "drop")
-
+  
+  heatmap_df <- linelist_long %>%
+    group_by(examiner, pathology_fate) %>%
+    summarise(
+      incorrect_prop = mean(correct_label == "incorrect"),
+      .groups = "drop"
+    ) %>%
+    tidyr::pivot_wider(
+      names_from = pathology_fate,
+      values_from = incorrect_prop
+    ) %>%
+    as.data.frame()
+  
+  row.names(heatmap_df) <- heatmap_df$examiner
+  heatmap_df$examiner <- NULL
+  
+  heat_mat <- as.matrix(heatmap_df)
   
 # to do --------

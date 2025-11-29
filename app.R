@@ -40,9 +40,9 @@ ui <- fluidPage(
     ),
     
     mainPanel(
-      h3("Quality of FATE results"),
-      plotOutput("plot_quality", height = "450px"),
-      br(),
+     ### h3("Quality of FATE results"),
+     ###  plotOutput("plot_quality", height = "450px"),
+     
       h3("FATE error heatmap"),
       plotOutput("heatmap_correct", height = "500px")
     
@@ -162,34 +162,40 @@ output$heatmap_correct <- renderPlot({
       .groups = "drop"
     )
   
-  ### pivot wide
-  heat_wide <- heat_df %>%
-    tidyr::pivot_wider(
-      names_from  = pathology_fate,
-      values_from = prop_incorrect,
-      values_fill = NA_real_   # NA → später white
+  ### color for smallest positive
+  min_pos <- suppressWarnings(
+    min(heat_df$prop_incorrect[heat_df$prop_incorrect > 0], na.rm = TRUE)
+  )
+  
+  if (!is.finite(min_pos)) {
+    min_pos <- 1  
+  }
+  
+  ### heatmap with ggplot
+  ggplot(
+    heat_df,
+    aes(x = pathology_fate, y = examiner, fill = prop_incorrect)
+  ) + 
+    geom_tile(color = "grey80") + 
+    scale_fill_gradientn(
+      colours = "#2ECC71", "#FADBD8", "#E74C3C",
+      values = scales::rescale(c(0, min_pos, 1)),
+      limits = c(0,1),
+      na.value = "white",
+      name = "prop_n_incorrect"
+    ) +
+    labs( 
+      x = "Pathology (FATE)",
+      y = "Examiner",
+      title = "Proportion of incorrect findings per examiner and pathology"
+      ) +
+    theme_minimal() +
+    theme(
+      axis.text.x  = element_text(angle = 45, hjust = 1),
+      panel.grid   = element_blank()
     )
   
-  
-  ### color scale 0 = green, 1 = red
-  col_fun <- circlize::colorRamp2(
-    c(0, 0.1, 1),
-    c("#2ECC71", "white", "#E74C3C")
-  )
-  
-  
  
-  
-  heatmap(
-    heat_wide,
-    name            = "heatmap_correct",
-    col             = col_fun,
-    na_col          = "white",    
-    cluster_rows    = FALSE,
-    cluster_columns = FALSE,
-    row_title       = "Examiner",
-    column_title    = "Pathology (FATE)"
-  )
 })
 
 }
