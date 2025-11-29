@@ -293,35 +293,6 @@ id_key <- linelist %>%
   correct_count <- linelist_long %>% 
     group_by(examiner, pathology_fate, correct_label) %>%
     summarise(n = n(), .groups = "drop")
-  
-  ### error_count_wide <- error_count %>% 
-  ###  pivot_wider(
-  ###    names_from  = error_type,
-  ###    values_from = n,
-  ###    values_fill = 0
-  ###  )
-  
-  
-   ## 
-  
-  
-  
-  ## re-pivot to wide
-  heat_df_wide <- correct_count %>% 
-    select(examiner, pathology_fate, correct_label) %>% 
-    pivot_wider(
-      names_from = pathology_fate,
-      values_from = correct_label
-    )
-  
-  heat_df_wide <- as.data.frame(heat_df_wide)
-  
-  rownames(heat_df_wide) <- linelist_long$examiner
-  heat_df_wide$examiner <- NULL
-  
-  ### optional: set levels
-    ### heat_df[] <- lapply(heat_df, function(x) factor(x, levels = c("none", "false_pos", "false_neg")))
-  
-  heat_mat <- as.matrix(heat_df_wide)
+
   
 # to do --------

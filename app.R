@@ -43,13 +43,17 @@ ui <- fluidPage(
       h3("Quality of FATE results"),
       plotOutput("plot_quality", height = "450px"),
       br(),
-      ## h4("Summary table"), tableOutput("table_quality")
       h3("FATE error heatmap"),
-      plotOutput("heatmap_errors", height = "500px")
+      plotOutput("heatmap_correct", height = "500px")
     
     )
   )
 )
+
+
+
+
+
 
 # SERVER --------
 server <- function(input, output, session) {
@@ -62,18 +66,20 @@ server <- function(input, output, session) {
   filtered_data <- reactive({
     dat <- linelist_long
     
+    #### Examiner-Filter
     if (!is.null(input$examiner) && length(input$examiner) > 0) {
       dat <- dat %>% filter(examiner %in% input$examiner)
     }
     
-    if (!is.null(input$diagn_grp) && length(input$pathology_fate) > 0) {
+    #### Pathology-Filter
+    if (!is.null(input$pathology_fate) && length(input$pathology_fate) > 0) {
       dat <- dat %>% filter(pathology_fate %in% input$pathology_fate)
     }
     
     dat
   })
   
-  ### summary: per Examiner x Pathology x (in)correct
+  ### aggregation for barchart: per Examiner x Pathology x correct_label
   summary_data <- reactive({
     filtered_data() %>%
       group_by(examiner, pathology_fate, correct_label) %>%
@@ -88,10 +94,13 @@ server <- function(input, output, session) {
       ungroup()
   })
   
-  
+  ## plot barchart ---------
+  output$plot_quality <- renderPlot({
+    dat <- summary_data()
+    req(nrow(dat) > 0)   # plot only, if data
   
   ### radiobutton proportion vs abs count
-  ### proportion
+  #### proportion
   if (input$prop_abs == "proportion") {
     ggplot(dat, aes(x = pathology_fate, y = prop, fill = correct_label)) +
       geom_col(position = "stack") +
@@ -113,7 +122,7 @@ server <- function(input, output, session) {
       theme_minimal()
   } 
   
-  ### count
+  #### count
   else {
     ggplot(dat, aes(x = pathology_fate, y = n, fill = correct_label)) +
       geom_col(position = "stack") +
@@ -133,23 +142,49 @@ server <- function(input, output, session) {
       coord_flip() +
       theme_minimal()
   }
-}
+})
+
 
   
   ## heatmap -------
-output$heatmap_errors <- renderPlot({
-  mat <- heat_mat_errors
-  req(nrow(mat) > 0, ncol(mat) > 0)
+output$heatmap_correct <- renderPlot({
+  ### get filtered data
+  dat <- filtered_data()
+  req(nrow(dat) > 0)
+      
+  ### proportion incorrect results
+  heat_df <- dat %>% 
+    group_by(examiner, pathology_fate) %>% 
+    summarise(
+      n_total = n(),
+      n_incorrect = sum(correct_label == "incorrect"),
+      prop_incorrect = n_incorrect / n_total,
+      .groups = "drop"
+    )
   
-  max_val <- max(mat, na.rm = TRUE)
+  ### pivot wide
+  heat_wide <- heat_df %>%
+    tidyr::pivot_wider(
+      names_from  = pathology_fate,
+      values_from = prop_incorrect,
+      values_fill = NA_real_   # NA → später white
+    )
   
-  Heatmap(
-    mat,
-    name = "n_errors",
-    col  = circlize::colorRamp2(
-      c(0, max_val),
-      c("white", "red")          # 0 = weiß, viele Fehler = dunkelrot
-    ),
+  
+  ### color scale 0 = green, 1 = red
+  col_fun <- circlize::colorRamp2(
+    c(0, 0.1, 1),
+    c("#2ECC71", "white", "#E74C3C")
+  )
+  
+  
+ 
+  
+  heatmap(
+    heat_wide,
+    name            = "heatmap_correct",
+    col             = col_fun,
+    na_col          = "white",    
     cluster_rows    = FALSE,
     cluster_columns = FALSE,
     row_title       = "Examiner",
@@ -157,15 +192,8 @@ output$heatmap_errors <- renderPlot({
   )
 })
 
-  
-  ### plot barchart ---------
-  output$plot_quality <- renderPlot({
-    dat <- summary_data()
-    req(nrow(dat) > 0)   # plot only, if data
-  
-  # Table -------
-  ## output$table_quality <- renderTable({  summary_data() %>% arrange(examiner, pathology_fate, desc(correct_label)) %>% mutate(prop = scales::percent(prop, accuracy = 0.1))})
-})
+}
 
+ 
 shinyApp(ui, server)
  
