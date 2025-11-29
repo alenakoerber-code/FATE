@@ -43,8 +43,10 @@ ui <- fluidPage(
       h3("Quality of FATE results"),
       plotOutput("plot_quality", height = "450px"),
       br(),
-      h4("Summary table"),
-      tableOutput("table_quality")
+      ## h4("Summary table"), tableOutput("table_quality")
+      h3("FATE heatmap"),
+      plotOutput("heatmap_plot", height = "500px")
+    
     )
   )
 )
@@ -67,7 +69,7 @@ server <- function(input, output, session) {
     dat
   })
   
-  # summary: per Examiner x Pathologie x korrekt/inkorrekt
+  # summary: per Examiner x Pathology x (in)correct
   summary_data <- reactive({
     filtered_data() %>%
       group_by(examiner, pathology_fate, correct_label) %>%
@@ -92,6 +94,12 @@ server <- function(input, output, session) {
     if (input$prop_abs == "proportion") {
       ggplot(dat, aes(x = pathology_fate, y = prop, fill = correct_label)) +
         geom_col(position = "stack") +
+        scale_fill_manual(
+          values = c(
+            "correct"   = "#2ECC71",
+            "incorrect" = "#E74C3C"
+          )
+        ) +
         scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
         labs(
           x = "Pathology group",
@@ -108,6 +116,12 @@ server <- function(input, output, session) {
     else {
       ggplot(dat, aes(x = pathology_fate, y = n, fill = correct_label)) +
         geom_col(position = "stack") +
+        scale_fill_manual(
+          values = c(
+            "correct"   = "#2ECC71",
+            "incorrect" = "#E74C3C" 
+          )
+        ) +
         labs(
           x = "Pathology group",
           y = "Number of cases",
@@ -121,15 +135,8 @@ server <- function(input, output, session) {
   })
   
   # Table -------
-  output$table_quality <- renderTable({
-    summary_data() %>%
-      arrange(examiner, pathology_fate, desc(correct_label)) %>%
-      mutate(prop = scales::percent(prop, accuracy = 0.1))
-  })
+  ## output$table_quality <- renderTable({  summary_data() %>% arrange(examiner, pathology_fate, desc(correct_label)) %>% mutate(prop = scales::percent(prop, accuracy = 0.1))})
 }
 
 shinyApp(ui, server)
-
-
-# to do ---------
-## farben ändern
+ 
