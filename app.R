@@ -1,6 +1,10 @@
 # intro -------
 source("cleaning.R")
 
+examiner_levels <- sort(unique(linelist_long$examiner))
+pathology_levels <- levels(linelist_long$pathology_fate)
+
+
 library(shiny)
 
 
@@ -179,6 +183,15 @@ output$heatmap_correct <- renderPlot({
       prop_incorrect = n_incorrect / n_total,
       .groups = "drop"
     )
+  
+  ### complete heatmap structure after filtered data
+  heat_df <- heat_df %>% 
+    complete(
+      examiner = examiner_levels,
+      pathology_fate = pathology_levels,
+      fill = list(prop_incorrect = NA_real_)
+    )
+  
   
   ### pivot wide
   heat_wide <- heat_df %>%
