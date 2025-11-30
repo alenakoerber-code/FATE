@@ -162,44 +162,53 @@ output$heatmap_correct <- renderPlot({
       .groups = "drop"
     )
   
-  ### color for smallest positive
-  min_pos <- suppressWarnings(
-    min(heat_df$prop_incorrect[heat_df$prop_incorrect > 0], na.rm = TRUE)
-  )
+  ### pivot wide
+  heat_wide <- heat_df %>%
+    tidyr::pivot_wider(
+      id_cols = examiner,
+      names_from  = pathology_fate,
+      values_from = prop_incorrect,
+      values_fill = NA_real_  
+    ) %>%
+    dplyr::distinct(examiner, .keep_all = TRUE) %>% 
+    as.data.frame()
   
-  if (!is.finite(min_pos)) {
-    min_pos <- 1  
-  }
-  
-  ### heatmap with ggplot
-  ggplot(
-    heat_df,
-    aes(x = pathology_fate, y = examiner, fill = prop_incorrect)
-  ) + 
-    geom_tile(color = "grey80") + 
-    scale_fill_gradientn(
-      colours = "#2ECC71", "#FADBD8", "#E74C3C",
-      values = scales::rescale(c(0, min_pos, 1)),
-      limits = c(0,1),
-      na.value = "white",
-      name = "prop_n_incorrect"
-    ) +
-    labs( 
-      x = "Pathology (FATE)",
-      y = "Examiner",
-      title = "Proportion of incorrect findings per examiner and pathology"
-      ) +
-    theme_minimal() +
-    theme(
-      axis.text.x  = element_text(angle = 45, hjust = 1),
-      panel.grid   = element_blank()
-    )
-  
- 
-})
+  ### as.numeric
+  rownames(heat_wide) <- heat_wide$examiner
+  heat_wide$examiner  <- NULL
+  heat_wide[] <- lapply(heat_wide, as.numeric)
 
+  heat_mat <- as.matrix(heat_wide)
+  
+
+  
+  
+  ### color filling
+  col_fun <- circlize::colorRamp2(
+    c(0, 0.000001, 1),
+    colors = c("#2ECC71", "#F8DBD4", "#E74C3C")   # green → red
+  )
+ 
+  ### heatmap with ComplexHeatmap
+  
+ hm <- ComplexHeatmap::Heatmap(
+      heat_mat,
+      name = "prop_incorrect",
+      col = col_fun,
+      na_col    = "white",  
+      cluster_rows = FALSE,
+      cluster_columns = FALSE,
+      row_title = "Examiner",
+      column_title = "Pathology (FATE)"
+    )
+ 
+ ComplexHeatmap::draw(hm)
+  })
+  
 }
 
+
+  
  
-shinyApp(ui, server)
+shinyApp(ui = ui, server = server)
  
