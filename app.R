@@ -31,14 +31,12 @@ ui <- fluidPage(
       ),
       
       # 3. Filter: time to advanced echo
-      sliderInput(
+      sliderTextInput(
         inputId = "echo_window",
         label   = "Maximum time to TTE/TEE",
-        min     = 1,
-        max     = 5,
-        value   = 5,    # Standard: alles einschließen
-        step    = 1,
-        ticks   = TRUE  # kleine Markierungen anzeigen
+        choices = c("< 24h", "24h", "48h", "72h", "> 72h"),
+        selected = "> 72h",
+        grid = TRUE
       )
       
     ),
@@ -62,16 +60,7 @@ ui <- fluidPage(
 
 # SERVER --------
 server <- function(input, output, session) {
-  
-  
-  echo_labels <- c(
-    "1" = "< 24 h",
-    "2" = "24 h",
-    "3" = "48 h",
-    "4" = "72 h",
-    "5" = "> 72 h"
-  ),
-  
+
 
   ### filtered data, depending Examiner & Pathology ----------
   filtered_data <- reactive({
@@ -89,11 +78,20 @@ server <- function(input, output, session) {
     
     #### time to echo filter
     if (!is.null(input$echo_window)) {
-      dat <- dat %>% 
-        filter(
-          !is.na(hours_to_adv_echo_cat), 
-          hours_to_adv_echo_cat <= input$echo_window
-      )
+      echo_map <- c(
+        "< 24h" = 1,
+        "24h" = 2,
+        "48h" = 3,
+        "72h" = 4, 
+        "> 72h" = 5
+        )
+      max_cat <- echo_map[[input$echo_window]]
+      
+      dat <-  dat %>% 
+         filter(
+           !is.na(hours_to_adv_echo_cat),
+           hours_to_adv_echo_cat <= max_cat
+         )
     }
       
     dat
