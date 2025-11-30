@@ -6,7 +6,7 @@ library(shiny)
 
 # ui ----------
 ui <- fluidPage(
-  titlePanel("FATE data quality dashboard"),
+  titlePanel("Quality of FATE exams"),
   
   sidebarLayout(
     sidebarPanel(
@@ -28,8 +28,22 @@ ui <- fluidPage(
         choices = levels(linelist_long$pathology_fate),
         multiple = TRUE,
         selected = sort(unique(linelist_long$pathology_fate))
+      ),
+      
+      # 3. Filter: time to advanced echo
+      sliderInput(
+        inputId = "echo_window",
+        label   = "Maximum time to TTE/TEE",
+        min     = 1,
+        max     = 5,
+        value   = 5,    # Standard: alles einschließen
+        step    = 1,
+        ticks   = TRUE  # kleine Markierungen anzeigen
       )
+      
     ),
+    
+    
     
     mainPanel(
      ### h3("Quality of FATE results"),
@@ -50,7 +64,13 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   
-
+  echo_labels <- c(
+    "1" = "< 24 h",
+    "2" = "24 h",
+    "3" = "48 h",
+    "4" = "72 h",
+    "5" = "> 72 h"
+  ),
   
 
   ### filtered data, depending Examiner & Pathology ----------
@@ -67,6 +87,15 @@ server <- function(input, output, session) {
       dat <- dat %>% filter(pathology_fate %in% input$pathology_fate)
     }
     
+    #### time to echo filter
+    if (!is.null(input$echo_window)) {
+      dat <- dat %>% 
+        filter(
+          !is.na(hours_to_adv_echo_cat), 
+          hours_to_adv_echo_cat <= input$echo_window
+      )
+    }
+      
     dat
   })
   

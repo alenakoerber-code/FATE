@@ -14,7 +14,8 @@ pacman::p_load(
   units,
   kableExtra,        # pivoting
   circlize,          # colorRamp2 heatmap
-  ComplexHeatmap     # installed via BiocManager
+  ComplexHeatmap,     # installed via BiocManager
+  shinyWidgets
   )
 
 
@@ -216,7 +217,7 @@ id_key <- linelist %>%
       )
           ) %>% 
   
-  ## hours to tte
+  ## hours to tte category => for slide filter
     mutate(
       hours_to_adv_echo_cat = case_when(
         hours_to_adv_echo == "<24h"   ~ 1,
