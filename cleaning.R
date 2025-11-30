@@ -13,8 +13,8 @@ pacman::p_load(
   readxl,      # reads excel datasets
   units,
   kableExtra,        # pivoting
-  circlize          # colorRamp2 heatmap
-  # ComplexHeatmap     # installed via BiocManager
+  circlize,          # colorRamp2 heatmap
+  ComplexHeatmap     # installed via BiocManager
   )
 
 

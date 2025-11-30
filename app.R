@@ -28,22 +28,13 @@ ui <- fluidPage(
         choices = levels(linelist_long$pathology_fate),
         multiple = TRUE,
         selected = sort(unique(linelist_long$pathology_fate))
-      ),
-      
-      # 3. switch proportion vs absolute
-      radioButtons(
-        inputId = "prop_abs",
-        label   = "",
-        choices = c("proportion", "count"),
-        selected = "proportion"
       )
     ),
     
     mainPanel(
      ### h3("Quality of FATE results"),
      ###  plotOutput("plot_quality", height = "450px"),
-     
-      h3("FATE error heatmap"),
+      h3("FATE correctness heatmap"),
       plotOutput("heatmap_correct", height = "500px")
     
     )
