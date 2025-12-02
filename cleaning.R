@@ -56,8 +56,8 @@ linelist <- linelist_raw %>%
       #### Patient names for pseudonymisation
         mutate(
           patient_name = recode(patient_name, 
-                    "Rahaus, Wolfgang (Le) II" = "Rahaus, Wolfgang",
-                    "Rahaus, Wolfgang (Le) I" = "Rahaus, Wolfgang"  
+                    "Ra, Wo (Le) II" = "Ra, Wo",
+                    "Ra, Wo (Le) I" = "Ra, Wo"  
                     )
               ) %>%
       
